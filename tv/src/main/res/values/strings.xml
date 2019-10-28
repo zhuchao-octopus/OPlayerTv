@@ -1,0 +1,26 @@
+<resources>
+    <string name="hello_world">Hello world!</string>
+    <string name="app_name">精合视频</string>
+    <string name="browse_title"><![CDATA[精合视频]]></string>
+    <string name="related_movies">Related Videos</string>
+    <string name="buy_grid_view">购物车</string>
+    <string name="my_favorites">我的收藏</string>
+    <string name="personal_settings">个人信息</string>
+    <string name="system_settings">系统设置</string>
+    <string name="watch_trailer_1">免费试看</string>
+    <string name="watch_trailer_2">免费试看</string>
+    <string name="rent_1">Rent By Day</string>
+    <string name="rent_2">From $1.99</string>
+    <string name="buy_1">Buy and Own</string>
+    <string name="buy_2">AT $9.99</string>
+    <string name="movie">Video</string>
+
+    <!-- Error messages -->
+    <string name="error_fragment_message">An error occurred</string>
+    <string name="dismiss_error">Dismiss</string>
+
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="textview">TextView</string>
+</resources>
