@@ -23,8 +23,10 @@ import android.util.Log;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
+import com.zhuchao.android.video.OMedia;
+
 import Myutils.OpenFileUtil;
-import com.zhuchao.android.video.Video;
+
 
 import java.io.File;
 
@@ -51,7 +53,7 @@ public class CardPresenter extends Presenter {
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent) {
-        Log.d(TAG, "onCreateViewHolder");
+        //Log.d(TAG, "onCreateViewHolder");
 
         sDefaultBackgroundColor =
                 ContextCompat.getColor(parent.getContext(), R.color.default_background);
@@ -81,21 +83,21 @@ public class CardPresenter extends Presenter {
 
     @Override
     public void onBindViewHolder(Presenter.ViewHolder viewHolder, Object item) {
-        Video video = (Video) item;
+        OMedia video = (OMedia) item;
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
-        Log.d(TAG, "onBindViewHolder");
+        //Log.d(TAG, "onBindViewHolder");
         //if (video.getmMovie().getCardImageUrl() != null) {
-        if (video.getmMovie()!= null) {
-            cardView.setTitleText(video.getmMovie().getMovieName());
-            cardView.setContentText(video.getmMovie().getStudio());
+        if (video.getMovie()!= null) {
+            cardView.setTitleText(video.getMovie().getMovieName());
+            cardView.setContentText(video.getMovie().getStudio());
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
 
-            if(OpenFileUtil.isExists(video.getmMovie().getSourceUrl()))
-                Glide.with(viewHolder.view.getContext()).load( Uri.fromFile( new File( video.getmMovie().getSourceUrl() ) ) ).into( cardView.getMainImageView());
+            if(OpenFileUtil.isExists(video.getMovie().getSourceUrl()))
+                Glide.with(viewHolder.view.getContext()).load( Uri.fromFile( new File( video.getMovie().getSourceUrl() ) ) ).into( cardView.getMainImageView());
             else
                 Glide.with(viewHolder.view.getContext())
-                        .load(video.getmMovie().getCardImageUrl())
+                        .load(video.getMovie().getCardImageUrl())
                         .centerCrop()
                         .error(mDefaultCardImage)
                         .into(cardView.getMainImageView());
@@ -105,7 +107,7 @@ public class CardPresenter extends Presenter {
     @Override
     public void onUnbindViewHolder(Presenter.ViewHolder viewHolder) {
         try {
-            Log.d(TAG, "onUnbindViewHolder");
+            //Log.d(TAG, "onUnbindViewHolder");
             ImageCardView cardView = (ImageCardView) viewHolder.view;
             // Remove references to images so that the garbage collector can free up memory
             cardView.setBadgeImage(null);

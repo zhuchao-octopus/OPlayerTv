@@ -21,35 +21,33 @@ import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
-import com.zhuchao.android.callbackevent.PlayerCallBackInterface;
-import com.zhuchao.android.video.ScheduleVideo;
-import com.zhuchao.android.video.Video;
-
-import java.util.Map;
-
-import Myutils.ChangeTool;
+import com.zhuchao.android.callbackevent.PlayerCallback;
+import com.zhuchao.android.video.OMedia;
 
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class FullscreenPlayBackActivity extends Activity implements PlayerCallBackInterface {
+public class FullscreenPlayBackActivity extends Activity implements PlayerCallback {
     private static final String TAG = "FullscreenPlayBackActivity-->";
     private static SurfaceView mSurfaceView;
-    private static Video mvideo = null;
-    private static CountDownTimer mCountDownTimer;
+    private static OMedia mvideo = null;
+    //private static CountDownTimer mCountDownTimerChannelControl;
     private static CountDownTimer mCountDownTimer1;
-    private TextView mtextView;
-    private ProgressBar mProgressBar = null;
     private static int Counter = 0;
     private static HomeWatcherReceiver mHomeKeyReceiver = null;
+    Handler mMyHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+
+        }
+    };
+    private TextView mtextView;
+    private ProgressBar mProgressBar = null;
     private MyReceiver mMyReceiver;
-    private byte temp[] = {0, 0, 0, 0};
+    //private byte[] temp = {0, 0, 0, 0};
+
 
     //MyPlayer OPlayer = null;
     @Override
@@ -59,24 +57,23 @@ public class FullscreenPlayBackActivity extends Activity implements PlayerCallBa
         setContentView(R.layout.activity_fullscreen);
         mSurfaceView = findViewById(R.id.surfaceView);
         mtextView = findViewById(R.id.textView);
-        mSurfaceView.setVisibility(View.INVISIBLE);
+       // mSurfaceView.setVisibility(View.INVISIBLE);
         mProgressBar = findViewById(R.id.progressBar);
         mProgressBar.setVisibility(View.INVISIBLE);
 
-        try
-        {
-            mvideo = (Video) getIntent().getSerializableExtra("Video");
+        try {
+            mvideo = (OMedia) getIntent().getSerializableExtra("Video");
             if (mvideo != null) {
-                mvideo.setCallback(this);
-                mtextView.setText(mvideo.getmMovie().getMovieName().toString());
+                mtextView.setText(mvideo.getMovie().getMovieName());
+                mvideo.with(this).callback(this);
             } else {
-                finish();
+                stopPlay();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        mCountDownTimer = new CountDownTimer(10000, 1000) {
+        /*mCountDownTimerChannelControl = new CountDownTimer(20000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 Counter++;
@@ -87,23 +84,25 @@ public class FullscreenPlayBackActivity extends Activity implements PlayerCallBa
             }
 
             @Override
-            public void onFinish() {
-                if (mvideo.getmNextVideo() != null) {
-                    mvideo = mvideo.getmNextVideo();
-                    playVideo(mvideo);
-                } else if (mvideo.getmPreVideo() != null) {
-                    mvideo = mvideo.getmPreVideo();
-                    playVideo(mvideo);
-                } else {
-                    //FullscreenPlayBackActivity.this.finish();
+            public void onFinish() { //跳转到下一个
+                if (mvideo != null) {
+                    if (mvideo.getNextOMedia() != null) {
+                        mvideo = mvideo.getNextOMedia();
+                        playVideo(mvideo);
+                    } else if (mvideo.getPreOMedia() != null) {
+                        mvideo = mvideo.getPreOMedia();
+                        playVideo(mvideo);
+                    } else {
+                        //FullscreenPlayBackActivity.this.finish();
+                        finish();
+                    }
                 }
             }
-        };
+        };*/
 
         mCountDownTimer1 = new CountDownTimer(2000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                // do something
             }
 
             @Override
@@ -122,6 +121,7 @@ public class FullscreenPlayBackActivity extends Activity implements PlayerCallBa
         filter.addAction("com.zhuchao.android.oplayertv.NEXT");
         filter.addAction("com.zhuchao.android.oplayertv.PREV");
         registerReceiver(mMyReceiver, filter);
+        registerHomeKeyReceiver(this);
     }
 
     @Override
@@ -130,18 +130,13 @@ public class FullscreenPlayBackActivity extends Activity implements PlayerCallBa
         playVideo(mvideo);
     }
 
-    private void playVideo(final Video video) {
-        Map<String, String> map;
+    private void playVideo(final OMedia video) {
         if (video != null) {
-            mProgressBar.setVisibility(View.VISIBLE);
-            mtextView.setText(video.getmMovie().getMovieName().toString());
-            //Log.d(TAG, "SourceID=" + video.getmMovie().getSourceId() + ", " + video.getmMovie().getSourceUrl());
+            //mProgressBar.setVisibility(View.VISIBLE);
+            mtextView.setText(video.getMovie().getMovieName());
             try {
-                if (video.getOPlayState() == 261) {
-                    video.getmOPlayer().play();
-                }
-                video.with(this).playInto(mSurfaceView);
-                mCountDownTimer.start();
+                video.with(this).playOn(mSurfaceView).callback(this);
+                //mCountDownTimerChannelControl.start();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -151,37 +146,34 @@ public class FullscreenPlayBackActivity extends Activity implements PlayerCallBa
     @Override
     protected void onResume() {
         super.onResume();
-        registerHomeKeyReceiver(this);
-        //if(mvideo != null)
-        //    if(mvideo.getmOPlayer() != null)
-        //        mvideo.getmOPlayer().playPause();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterHomeKeyReceiver(this);
-        this.finish();
+        stopPlay();
     }
 
     @Override
     public void onBackPressed() {
-        Log.i(TAG, "onBackPressed");
-        if (mvideo != null)
-            mvideo.stopPlayer();
-        this.finish();
         super.onBackPressed();
+        Log.i(TAG, "onBackPressed");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mCountDownTimer.cancel();
+        //mCountDownTimerChannelControl.cancel();
         mCountDownTimer1.cancel();
-        if (mvideo != null)
-            mvideo.stopPlayer();
-        if (mMyReceiver != null)
+        stopPlay();
+
+        if (mMyReceiver != null) {
             unregisterReceiver(mMyReceiver);
+            mMyReceiver = null;
+        }
+
+        if (null != mHomeKeyReceiver)
+            unregisterHomeKeyReceiver(this);
     }
 
     @Override
@@ -193,139 +185,96 @@ public class FullscreenPlayBackActivity extends Activity implements PlayerCallBa
             builder.setTitle("退出提示：");
             builder.setMessage("您真的要退出吗？");
 
-            builder.setNegativeButton("不，继续观看", new DialogInterface.OnClickListener() {
+            builder.setNegativeButton("我要继续观看", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                 }
             });
-            builder.setPositiveButton("是的", new DialogInterface.OnClickListener() {
+
+            builder.setPositiveButton("退出", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    finish();
+                    stopPlay();
                 }
             });
+
             builder.show();
         }
 
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            if (mvideo.getmPreVideo() != null) {
-                mvideo = mvideo.getmPreVideo();
-                mtextView.setText(mvideo.getmMovie().getMovieName().toString());
-                mCountDownTimer1.cancel();
-                mCountDownTimer1.start();
+            if (mvideo != null) {
+                if (mvideo.getPreOMedia() != null) {
+                    mvideo = mvideo.getPreOMedia();
+                    mtextView.setText(mvideo.getMovie().getMovieName());
+                    mCountDownTimer1.cancel();
+                    mCountDownTimer1.start();
+                }
             }
         }
 
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-            if (mvideo.getmNextVideo() != null) {
-                mvideo = mvideo.getmNextVideo();
-                mtextView.setText(mvideo.getmMovie().getMovieName().toString());
-                mCountDownTimer1.cancel();
-                mCountDownTimer1.start();
+            if (mvideo != null) {
+                if (mvideo.getNextOMedia() != null) {
+                    mvideo = mvideo.getNextOMedia();
+                    mtextView.setText(mvideo.getMovie().getMovieName());
+                    mCountDownTimer1.cancel();
+                    mCountDownTimer1.start();
+                }
             }
         }
+
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-            mvideo.getmOPlayer().playPause();
+            if (mvideo != null)
+            mvideo.playPause();
         }
+
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN_LEFT) {
 
         }
+
         if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 
+        }
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
+            if (mvideo != null) mvideo.playPause();
+        }
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP) {
+            stopPlay();
+        }
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_NEXT) {
+            if (mvideo != null) mvideo.getNextOMedia().play();
+        }
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
+            if (mvideo != null) mvideo.getPreOMedia().play();
+        }
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD) {
+            if (mvideo != null) mvideo.fastForward(500);
+        }
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_REWIND) {
+            if (mvideo != null) mvideo.fastBack(500);
         }
         return super.onKeyDown(keyCode, event);
     }
 
     @Override
     public void OnEventCallBack(int i, final long l, long l1, float v, int i1, int i2, int i3, float v1, long l2) {
-        //final int itype = i-200;
-        if (mvideo.getmOPlayer() == null) return;
+        if (mvideo== null) return;
 
+        //Log.d(TAG,"mvideo.getPlayState()="+mvideo.getPlayState());
         //Log.d(TAG,"event.type="+i+",TimeChanged="+l +", LengthChanged=" + l1+", PositionChanged="+ v +", VoutCount="+ i1  +", i2="+ i2  +", i3="+ i3  +", v1="+ v1+",Length="+l2);
-        if (mvideo.getmOPlayer().getPlayerState() >= 3 && mvideo.getmOPlayer().getPlayerState() <= 6 && l != 0) {
-            if (mProgressBar != null)
-                mProgressBar.setVisibility(View.GONE);
-            mCountDownTimer.cancel();
 
-            new Thread() {     //不可在主线程中调用
-                public void run() {
-                    try {
-                        if (mvideo instanceof ScheduleVideo)
-                        {
-                            temp = ChangeTool.intToBytes((int) l);
-                            MyService.writeHHmmssToDsp(((ScheduleVideo) mvideo).getID(), mvideo.getmOPlayer().getPlayerState(), temp[0], temp[1], temp[2], temp[3]);
-                            //temp = ChangeTool.intToBytes((int)l2);
-                            //MyService.writeHHmmssToDsp(0xFF, temp[2], temp[1], temp[0]);
-                        }
-                        else
-                            {
-                            temp = ChangeTool.intToBytes((int) l);
-                            MyService.writeHHmmssToDsp(0, mvideo.getmOPlayer().getPlayerState(), temp[0], temp[1], temp[2], temp[3]);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+        //if (mvideo.getPlayState() >= 3 && mvideo.getPlayState() <= 6 && l != 0) {
+            //if (mProgressBar != null)
+            //    if(mProgressBar.getVisibility() == View.VISIBLE)
+            //       mProgressBar.setVisibility(View.GONE);
+        //    mCountDownTimerChannelControl.cancel();
+        //    return;
+        //}
 
-            }.start();
-
-
-        } else if (mvideo.getmOPlayer().getPlayerState() > 5) {
-            if (mvideo instanceof ScheduleVideo) {
-                finish();
-            } else if (mvideo.getmNextVideo() != null) {
-                mvideo = mvideo.getmNextVideo();
-                playVideo(mvideo);
-            }
-
-        } else {
-
-        }
-    }
-
-    Handler mMyHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-
-        }
-    };
-
-    class HomeWatcherReceiver extends BroadcastReceiver {
-        private static final String LOG_TAG = "HomeReceiver";
-        private static final String SYSTEM_DIALOG_REASON_KEY = "reason";
-        private static final String SYSTEM_DIALOG_REASON_RECENT_APPS = "recentapps";
-        private static final String SYSTEM_DIALOG_REASON_HOME_KEY = "homekey";
-        private static final String SYSTEM_DIALOG_REASON_LOCK = "lock";
-        private static final String SYSTEM_DIALOG_REASON_ASSIST = "assist";
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Log.i(LOG_TAG, "onReceive: action: " + action);
-            if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-                // android.intent.action.CLOSE_SYSTEM_DIALOGS
-                String reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY);
-
-                Log.i(LOG_TAG, "reason: " + reason);
-
-                if (SYSTEM_DIALOG_REASON_HOME_KEY.equals(reason)) {
-                    // 短按Home键
-                    Log.i(LOG_TAG, "homekey");
-                    FullscreenPlayBackActivity.this.finish();
-                } else if (SYSTEM_DIALOG_REASON_RECENT_APPS.equals(reason)) {
-                    // 长按Home键 或者 activity切换键
-                    Log.i(LOG_TAG, "long press home key or activity switch");
-                    FullscreenPlayBackActivity.this.finish();
-                } else if (SYSTEM_DIALOG_REASON_LOCK.equals(reason)) {
-                    // 锁屏
-                    FullscreenPlayBackActivity.this.finish();
-                    Log.i(LOG_TAG, "lock");
-                } else if (SYSTEM_DIALOG_REASON_ASSIST.equals(reason)) {
-                    // samsung 长按Home键
-                    FullscreenPlayBackActivity.this.finish();
-                    Log.i(LOG_TAG, "assist");
-                }
-            }
+        if (mvideo.getPlayState() >= 6) {
+            stopPlay();
+            Log.d(TAG, "mvideo.getPlayState()=" + mvideo.getPlayState());
+            Log.d(TAG, "event.type=" + i + ",TimeChanged=" + l + ", LengthChanged=" + l1 + ", PositionChanged=" + v + ", VoutCount=" + i1 + ", i2=" + i2 + ", i3=" + i3 + ", v1=" + v1 + ",Length=" + l2);
         }
     }
 
@@ -341,60 +290,67 @@ public class FullscreenPlayBackActivity extends Activity implements PlayerCallBa
     @SuppressLint("LongLogTag")
     private void unregisterHomeKeyReceiver(Context context) {
         Log.i(TAG, "unregisterHomeKeyReceiver");
-        if (null != mHomeKeyReceiver) {
-            context.unregisterReceiver(mHomeKeyReceiver);
-        }
-    }
-
-    public Map<String, String> JsonToMap(String Jsonstr) {
-        Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().create();
         try {
-            return gson.fromJson(Jsonstr, new TypeToken<Map<String, String>>() {
-            }.getType());
-        } catch (JsonSyntaxException e) {
+            if (null != mHomeKeyReceiver) {
+                context.unregisterReceiver(mHomeKeyReceiver);
+                mHomeKeyReceiver = null;
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
     }
 
-
-    public class MyReceiver extends BroadcastReceiver {
+    class HomeWatcherReceiver extends BroadcastReceiver {
+        private static final String LOG_TAG = "HomeReceiver";
+        private static final String SYSTEM_DIALOG_REASON_KEY = "reason";
+        private static final String SYSTEM_DIALOG_REASON_RECENT_APPS = "recentapps";
+        private static final String SYSTEM_DIALOG_REASON_HOME_KEY = "homekey";
+        private static final String SYSTEM_DIALOG_REASON_LOCK = "lock";
+        private static final String SYSTEM_DIALOG_REASON_ASSIST = "assist";
 
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            Log.i(LOG_TAG, "onReceive: action: " + action);
+            if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
+                String reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY);
+                if (SYSTEM_DIALOG_REASON_HOME_KEY.equals(reason)) {
+                    // 短按Home键
+                    stopPlay();
+                    Log.i(LOG_TAG, "homekey");
 
-            if (action.equals("com.zhuchao.android.oplayertv.PLAY")) {
-
-                Video video = (Video) intent.getSerializableExtra("Video");
-
-                if (video != null) {
-                    mvideo = mvideo.getmPreVideo();
-                    playVideo(mvideo);
-                    return;
+                } else if (SYSTEM_DIALOG_REASON_RECENT_APPS.equals(reason)) {
+                    // 长按Home键 或者 activity切换键
+                    stopPlay();
+                    Log.i(LOG_TAG, "long press home key or activity switch");
+                } else if (SYSTEM_DIALOG_REASON_LOCK.equals(reason)) {
+                    // 锁屏
+                    stopPlay();
+                    Log.i(LOG_TAG, "lock");
+                } else if (SYSTEM_DIALOG_REASON_ASSIST.equals(reason)) {
+                    stopPlay();
+                    Log.i(LOG_TAG, "assist");
                 }
-
-                if (mvideo != null) {
-                    if (!mvideo.isPlaying())
-                        mvideo.getmOPlayer().play();
-                }
-            } else if (action.equals("com.zhuchao.android.oplayertv.PAUSE")) {
-                if (mvideo != null)
-                    mvideo.getmOPlayer().pause();
-            } else if (action.equals("com.zhuchao.android.oplayertv.NEXT")) {
-                if (mvideo.getmNextVideo() != null) {
-                    mvideo = mvideo.getmNextVideo();
-                    playVideo(mvideo);
-                }
-            } else if (action.equals("com.zhuchao.android.oplayertv.PREV")) {
-                if (mvideo.getmPreVideo() != null) {
-                    mvideo = mvideo.getmPreVideo();
-                    playVideo(mvideo);
-                }
-            } else if (action.equals("com.zhuchao.android.oplayertv")) {
-                finish();
             }
+        }
+    }
 
+    private synchronized void stopPlay() {
+        new Thread() {
+            public void run() {
+                if (mvideo != null)
+                    mvideo.stop();
+                //mvideo = null;
+            }
+        }.start();
+
+        FullscreenPlayBackActivity.this.finish();
+    }
+
+    public class MyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
         }
     }
 

@@ -23,6 +23,7 @@ public class OplayerApplication extends Application {
         super.onCreate();
         appContext = this.getApplicationContext();
         //getOpsM();
+
     }
 
     @Override

@@ -2,64 +2,90 @@ apply plugin: 'com.android.application'
 
 
 android {
+
+    signingConfigs {
+        release {
+            storeFile file('rk3229.keystore')
+            storePassword '1234998'
+            keyAlias 'rk3229'
+            keyPassword'1234998'
+        }
+        debug {
+            storeFile file("rk3229.keystore")
+            storePassword '1234998'
+            keyAlias 'rk3229'
+            keyPassword'1234998'
+        }
+    }
+
     compileSdkVersion 28
+    buildToolsVersion '29.0.1'
+
+    applicationVariants.all {
+        variant ->
+            variant.outputs.all {
+                def fileName = "Oplayer_v${defaultConfig.versionName}_${releaseTime()}.apk"
+                outputFileName = fileName
+            }
+    }
+
+
     defaultConfig {
         applicationId "com.zhuchao.android.oplayertv"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 27
-        versionName "2.7"
+        versionCode 29
+        versionName "2.9"
+        signingConfig signingConfigs.release
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
+            signingConfig signingConfigs.release
+            debuggable = true
+
         }
+        debug {
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility = 1.7
+        targetCompatibility = 1.8
     }
 
-    buildToolsVersion '28.0.3'
-    signingConfigs {
-        Release {
-            storeFile file('C:\\com.zhuchao.android.key.jks')
-            storePassword System.getenv('1234998')
-            keyAlias = 'com.zhuchao.android'
-            keyPassword System.getenv('1234998')
-        }
-    }
 
-    build.doLast {
-        def today = new Date().format('yyyyMMdd_hh');
-        copy{
-            from('build/outputs/apk')
-            into('build/outputs/')
-            include('app-release.apk')
-            rename('app-release.apk','Jhz-tv' + "-"+ today + '.apk')
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-            //cppFlags ""
-            //arguments "-DANDROID_STL=c++_shared"
-        }
-    }
 }
+
+def releaseTime() {
+    return new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("UTC"))
+}
+
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:leanback-v17:28.0.0'
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.github.bumptech.glide:glide:3.8.0'
-    implementation 'com.zhuchao.android:libDecodeCore:2.0:@aar'
-    implementation 'com.zhuchao.android:libNetUtil:2.0:@aar'
-    implementation 'com.zhuchao.android:libPlayUtil:2.1:@aar'
-    implementation 'com.zhuchao.android:libPlaySession:2.2:@aar'
-    implementation 'com.zhuchao.android:libVideo:1.0:@aar'
-    implementation 'com.zhuchao.android:libDialog:1.0:@aar'
-    implementation 'com.zhuchao.android:libCallbackEvent:1.0:@aar'
-    implementation 'com.zhuchao.android:libFileManager:1.0:@aar'
     implementation 'com.nineoldandroids:library:2.4.0'
     implementation 'com.android.support:support-v4:28.0.0'
+
+    implementation 'com.zhuchao.android:libDecodeCore:+@aar'
+    implementation 'com.zhuchao.android:libNetUtil:+@aar'
+    implementation 'com.zhuchao.android:libPlayUtil:+@aar'
+    implementation 'com.zhuchao.android:libPlaySession:+@aar'
+    implementation 'com.zhuchao.android:libVideo:+@aar'
+    implementation 'com.zhuchao.android:libCallbackEvent:+@aar'
+    implementation 'com.zhuchao.android:libFilesManager:+@aar'
+    implementation 'com.zhuchao.android:libDataBaseUtil:+@aar'
+    implementation 'com.zhuchao.android:libDialog:+@aar'
+
+    implementation('com.squareup.okhttp3:okhttp:4.2.2')
+    implementation ('com.squareup.okio:okio:1.14.0')
+    implementation 'me.jessyan:progressmanager:1.5.0'
+
 }

@@ -26,9 +26,5 @@ dependencies {
     testImplementation 'junit:junit:4.13-beta-2'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation 'com.zhuchao.android:libNetUtil:2.0:@aar'
-    implementation 'com.zhuchao.android:libDecodeCore:2.0:@aar'
-    implementation 'com.zhuchao.android:libPlayUtil:2.0:@aar'
-    implementation 'com.zhuchao.android:libPlaySession:2.0:@aar'
-    implementation 'com.zhuchao.android:libCallbackEvent:1.0:@aar'
+
 }

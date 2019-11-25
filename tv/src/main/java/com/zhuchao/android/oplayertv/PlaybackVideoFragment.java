@@ -22,7 +22,7 @@ import android.support.v17.leanback.media.MediaPlayerAdapter;
 import android.support.v17.leanback.media.PlaybackTransportControlGlue;
 import android.support.v17.leanback.widget.PlaybackControlsRow;
 
-import com.zhuchao.android.video.Video;
+import com.zhuchao.android.video.OMedia;
 
 
 /**
@@ -36,7 +36,7 @@ public class PlaybackVideoFragment extends VideoSupportFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Video video = (Video) getActivity().getIntent().getSerializableExtra("Video");
+        final OMedia video = (OMedia) getActivity().getIntent().getSerializableExtra("Video");
 
         VideoSupportFragmentGlueHost glueHost = new VideoSupportFragmentGlueHost(PlaybackVideoFragment.this);
 
@@ -45,8 +45,8 @@ public class PlaybackVideoFragment extends VideoSupportFragment {
 
         mTransportControlGlue = new PlaybackTransportControlGlue<>(getContext(), playerAdapter);
         mTransportControlGlue.setHost(glueHost);
-        mTransportControlGlue.setTitle(video.getmMovie().getMovieName());
-        mTransportControlGlue.setSubtitle(video.getmMovie().getDescription());
+        mTransportControlGlue.setTitle(video.getMovie().getMovieName());
+        mTransportControlGlue.setSubtitle(video.getMovie().getDescription());
         mTransportControlGlue.playWhenPrepared();
         playerAdapter.setDataSource(Uri.parse("http://hljjms.chinashadt.com:2036/live/1002.stream/playlist.m3u8")); //"http://ivi.bupt.edu.cn/hls/cctv10.m3u8"
     }

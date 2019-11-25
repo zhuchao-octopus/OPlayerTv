@@ -13,8 +13,8 @@ import android.util.Log;
 import com.zhuchao.android.playsession.OPlayerSession;
 import com.zhuchao.android.playsession.SchedulePlaybackSession;
 import com.zhuchao.android.playsession.SessionCompleteCallback;
-import com.zhuchao.android.video.ScheduleVideo;
-import com.zhuchao.android.video.Video;
+import com.zhuchao.android.video.OMedia;
+import com.zhuchao.android.video.ScheduleMedia;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -38,7 +38,7 @@ public class MyService extends Service {
     private int SerialPortReceiveBufferIndex = 0;
     private Handler Myhandler;
     private NotificationCallback mCallback;
-    private ScheduleVideo mScheduleVideo = null;
+    private ScheduleMedia mScheduleVideo = null;
 
     //private List<Video> allVideos = null;
     //private int VideoIndex=0;
@@ -53,7 +53,7 @@ public class MyService extends Service {
         @Override
         public void handleMessage(Message msg) {
             try {
-                ScheduleVideo scheduleVideo = (ScheduleVideo) msg.obj;
+                ScheduleMedia scheduleVideo = (ScheduleMedia) msg.obj;
 
                 if ((scheduleVideo != null) && scheduleVideo.isPlayScheduled()) {
                     Intent intent = new Intent(MyService.this, FullscreenPlayBackActivity.class);
@@ -75,7 +75,7 @@ public class MyService extends Service {
                         }
                     }
                 } else if ((mScheduleVideo != null) && (scheduleVideo != null) && scheduleVideo.isStopScheduled() && (mScheduleVideo.equals(scheduleVideo))) {
-                    scheduleVideo.stopPlayer();
+                    scheduleVideo.stop();
                     mScheduleVideo = null;
                     Intent intent = new Intent(MyService.this, MainActivity.class);
                     startActivity(intent);
@@ -222,11 +222,11 @@ public class MyService extends Service {
                         i.setAction("com.zhuchao.android.oplayertv.PLAY");
                         sendBroadcast(i);
                     } else {
-                        List<Video> allVideos = MediaLibrary.getSessionManager(MyService.this).getAllVideoList();
+                        List<OMedia> allVideos = MediaLibrary.getSessionManager(MyService.this).getAllVideoList();
                         if (allVideos.size() > 0) {
-                            Video video = allVideos.get(0);
+                            OMedia video = allVideos.get(0);
                             if (video != null) {
-                                Log.d("MyService", video.getmMovie().getSourceUrl().toString());
+                                Log.d("MyService", video.getMovie().getSourceUrl().toString());
                                 Intent intent = new Intent(MyService.this, FullscreenPlayBackActivity.class);
                                 intent.putExtra("Video", video);
                                 startActivity(intent);
@@ -252,7 +252,7 @@ public class MyService extends Service {
                     sendBroadcast(i);
                 } else if (str.equals("010101000001000C107E"))//usb
                 {
-                    Video video = MobileSession.getVideoByIndex(0);
+                    OMedia video = MobileSession.getVideoByIndex(0);
                     if(video == null)
                     {
                         Intent i = new Intent();
@@ -274,7 +274,7 @@ public class MyService extends Service {
                     }
                 } else if (str.equals("010101000001000D117E"))//tf
                 {
-                    Video video = MomileTFSession.getVideoByIndex(0);
+                    OMedia video = MomileTFSession.getVideoByIndex(0);
                     if(video == null)
                     {
                         Intent i = new Intent();
@@ -296,7 +296,7 @@ public class MyService extends Service {
                     }
                 } else if (str.equals("010101000001000B0F7E"))//网络
                 {
-                    Video video = LocalSession.getVideoByIndex(0);
+                    OMedia video = LocalSession.getVideoByIndex(0);
                     if(video == null)
                     {
                         Intent i = new Intent();
@@ -472,7 +472,7 @@ public class MyService extends Service {
         WriteDataToDSP(dataDate);
     }
 
-    private synchronized void writeScheduleVideoToDsp(List<ScheduleVideo> ScheduleVideos) {
+    private synchronized void writeScheduleVideoToDsp(List<ScheduleMedia> ScheduleVideos) {
         data[2] = 0x0c;
         data[3] = 0x00;
         data[5] = 0x03;
@@ -480,7 +480,7 @@ public class MyService extends Service {
         int i = 0;
         byte ii = 0;
 
-        for (ScheduleVideo scheduleVideo : ScheduleVideos) {
+        for (ScheduleMedia scheduleVideo : ScheduleVideos) {
             String[] hhmm = scheduleVideo.getmPlayTime().split(":");
             data[7] = (byte) i;
             ii = (byte) Integer.parseInt(hhmm[0]);
@@ -515,7 +515,7 @@ public class MyService extends Service {
                                     e.printStackTrace();
                                 }
                                 while (MediaLibrary.schedulePlaybackSession.hasScheduleSession()) {
-                                    ScheduleVideo scheduleVideo = MediaLibrary.schedulePlaybackSession.pollingScheudulePlay();
+                                    ScheduleMedia scheduleVideo = MediaLibrary.schedulePlaybackSession.pollingScheudulePlay();
                                     if (scheduleVideo != null) {
                                         Message msg = new Message();
                                         msg.what = 100;

@@ -41,7 +41,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.zhuchao.android.video.Video;
+import com.zhuchao.android.video.OMedia;
 
 /*
  * LeanbackDetailsFragment extends DetailsFragment, a Wrapper fragment for leanback details screens.
@@ -59,7 +59,7 @@ public class VideoDetailsFragment extends DetailsFragment {
 
     private static final int NUM_COLS = 10;
 
-    private Video mSelectedMovie;
+    private OMedia mSelectedMovie;
 
     private ArrayObjectAdapter mAdapter;
     private ClassPresenterSelector mPresenterSelector;
@@ -73,7 +73,7 @@ public class VideoDetailsFragment extends DetailsFragment {
 
         mDetailsBackground = new DetailsFragmentBackgroundController(this);
 
-        mSelectedMovie = (Video) getActivity().getIntent().getSerializableExtra("Video");
+        mSelectedMovie = (OMedia) getActivity().getIntent().getSerializableExtra("Video");
         if (mSelectedMovie != null) {
             mPresenterSelector = new ClassPresenterSelector();
             mAdapter = new ArrayObjectAdapter(mPresenterSelector);
@@ -89,10 +89,10 @@ public class VideoDetailsFragment extends DetailsFragment {
         }
     }
 
-    private void initializeBackground(Video data) {
+    private void initializeBackground(OMedia data) {
         mDetailsBackground.enableParallax();
         Glide.with(getActivity())
-                .load(data.getmMovie().getBgImageUrl())
+                .load(data.getMovie().getBgImageUrl())
                 .asBitmap()
                 .centerCrop()
                 .error(R.drawable.default_background)
@@ -114,7 +114,7 @@ public class VideoDetailsFragment extends DetailsFragment {
         int width = convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_WIDTH);
         int height = convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_HEIGHT);
         Glide.with(getActivity())
-                .load(mSelectedMovie.getmMovie().getCardImageUrl())
+                .load(mSelectedMovie.getMovie().getCardImageUrl())
                 .centerCrop()
                 .error(R.drawable.default_background)
                 .into(new SimpleTarget<GlideDrawable>(width, height) {
@@ -209,7 +209,7 @@ public class VideoDetailsFragment extends DetailsFragment {
                 RowPresenter.ViewHolder rowViewHolder,
                 Row row) {
 
-            if (item instanceof Video) {
+            if (item instanceof OMedia) {
                 Log.d(TAG, "Item: " + item.toString());
                 Intent intent = new Intent(getActivity(), DetailsActivity.class);
                 intent.putExtra(getResources().getString(R.string.movie), mSelectedMovie);

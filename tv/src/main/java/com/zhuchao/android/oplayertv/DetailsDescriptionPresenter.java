@@ -16,19 +16,19 @@ package com.zhuchao.android.oplayertv;
 
 import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
 
-import com.zhuchao.android.video.Video;
+import com.zhuchao.android.video.OMedia;
 
 
 public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
 
     @Override
     protected void onBindDescription(ViewHolder viewHolder, Object item) {
-        Video movie = (Video) item;
+        OMedia movie = (OMedia) item;
 
         if (movie != null) {
-            viewHolder.getTitle().setText(movie.getmMovie().getMovieName());
-            viewHolder.getSubtitle().setText(movie.getmMovie().getStudio());
-            viewHolder.getBody().setText(movie.getmMovie().getDescription());
+            viewHolder.getTitle().setText(movie.getMovie().getMovieName());
+            viewHolder.getSubtitle().setText(movie.getMovie().getStudio());
+            viewHolder.getBody().setText(movie.getMovie().getDescription());
         }
     }
 }

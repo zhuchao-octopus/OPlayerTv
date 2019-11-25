@@ -20,7 +20,7 @@ import android.util.Log;
 import com.zhuchao.android.playsession.OPlayerSession;
 import com.zhuchao.android.playsession.OPlayerSessionManager;
 import com.zhuchao.android.playsession.SchedulePlaybackSession;
-import com.zhuchao.android.video.Video;
+import com.zhuchao.android.video.OMedia;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +61,8 @@ public final class MediaLibrary { // implements SessionCompleteCallback
 
     //释放OPlayerSessionManager
     public static void ClearOPlayerSessionManager() {
+        if (mSessionManager != null)
+            mSessionManager.free();
         mSessionManager = null;
     }
 
@@ -89,8 +91,8 @@ public final class MediaLibrary { // implements SessionCompleteCallback
     //参数是MOVIE_CATEGORY 的ID,这个ID 是固定的，由OPlayerSessionManager 分配
     //返回值是videos列表，每个video对象可以是视频、音乐、图片
     //通过video.with(this).playInto(mSurfaceView); 这样的调用形式可以将这个媒体播放出来
-    public static List<Video> getMediaListByID(int categoryID) {
-        List<Video> videos = null;
+    public static List<OMedia> getMediaListByID(int categoryID) {
+        List<OMedia> videos = null;
         if (mSessionManager.isInitComplete() && (categoryID > 0)) {
             mSessions = mSessionManager.getmSessions();//获取板块分类集合
             videos = mSessions.get(categoryID).getVideos();//从集合中得到直播视频列表
@@ -102,8 +104,8 @@ public final class MediaLibrary { // implements SessionCompleteCallback
     //通过调用这个函数获得列表 创建本地 UI界面
     //参数是MOVIE_CATEGORY 的Index 不是CATEGORY ID 如果不用MOVIE_CATEGORY数组来适配，则该方法无效
     //
-    public static List<Video> getMediaListByIndex(int categoryIndex) {
-        List<Video> videos = null;
+    public static List<OMedia> getMediaListByIndex(int categoryIndex) {
+        List<OMedia> videos = null;
         String categoryName = MOVIE_CATEGORY.get(categoryIndex).toString();
         int categoryId = getCategoryIdByValue(categoryName);
 
@@ -120,7 +122,7 @@ public final class MediaLibrary { // implements SessionCompleteCallback
         if (mSessionManager == null) return;
         mSessionManager.initSessionFromMobileDisc();
 
-        if(schedulePlaybackSession !=null)
+        if (schedulePlaybackSession != null)
             schedulePlaybackSession.updateSchedulePlaybackSession();
     }
 
@@ -151,6 +153,11 @@ public final class MediaLibrary { // implements SessionCompleteCallback
                 return (int) entry.getKey();
         }
         return -10;
+    }
+
+    public static void free() {
+        //getSessionManager(
+        ClearOPlayerSessionManager();
     }
 
     //该方法为OPlayerSessionManager 的回调方法，当OPlayerSessionManager 完成了一个任务后，

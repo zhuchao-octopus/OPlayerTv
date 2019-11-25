@@ -59,7 +59,7 @@ import com.zhuchao.android.playsession.OPlayerSession;
 import com.zhuchao.android.playsession.SessionCompleteCallback;
 import com.zhuchao.android.shapeloading.ShapeLoadingDialog;
 import com.zhuchao.android.video.Movie;
-import com.zhuchao.android.video.Video;
+import com.zhuchao.android.video.OMedia;
 
 import java.util.List;
 import java.util.Map;
@@ -100,20 +100,22 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         setupUIElements();
 
         MediaLibrary.getSessionManager(getActivity()).setUserSessionCallback(this);
+
+
         //if (!MediaLibrary.isSessionManagerInitComplete())
         //   showLoadingDialog(getActivity(), true);
 
-//        Intent intent = null;
-//        intent.setPackage("com.android.time.service");
-//        try {
-//            if (checkApkExist(getActivity(), "com.android.time.service"))
-//                startActivity(intent);
-//            else
-//                Log.d(TAG,"没有找到应用"+"com.android.time.service");//Toast.makeText(getActivity(), "没有找到应用： " + map.get("package"), Toast.LENGTH_SHORT).show();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            Log.d(TAG,"没有找到应用"+"com.android.time.service");//Toast.makeText(getActivity(), "没有找到应用： " + map.get("package"), Toast.LENGTH_SHORT).show();
-//        }
+        //   Intent intent = null;
+        //   intent.setPackage("com.android.time.service");
+        //   try {
+        //    if (checkApkExist(getActivity(), "com.android.time.service"))
+        //        startActivity(intent);
+        //     else
+        //        Log.d(TAG,"没有找到应用"+"com.android.time.service");//Toast.makeText(getActivity(), "没有找到应用： " + map.get("package"), Toast.LENGTH_SHORT).show();
+        // } catch (Exception e) {
+        //            e.printStackTrace();
+        //        Log.d(TAG,"没有找到应用"+"com.android.time.service");//Toast.makeText(getActivity(), "没有找到应用： " + map.get("package"), Toast.LENGTH_SHORT).show();
+        //}
 
     }
 
@@ -133,17 +135,17 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         mBackgroundManager.attach(getActivity().getWindow());
 
         //mDefaultBackground = ContextCompat.getDrawable(getContext(), R.drawable.default_background);
-        mDefaultBackground = ContextCompat.getDrawable(getContext(), R.drawable.bg0);
+        mDefaultBackground = ContextCompat.getDrawable(getContext(), R.drawable.bg3);
         mMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
 
-        mBackgroundManager.setDrawable(ContextCompat.getDrawable(getContext(), R.drawable.bg0));
+        mBackgroundManager.setDrawable(ContextCompat.getDrawable(getContext(), R.drawable.bg3));
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        mBackgroundManager.setDrawable(ContextCompat.getDrawable(getContext(), R.drawable.bg0));
+        mBackgroundManager.setDrawable(ContextCompat.getDrawable(getContext(), R.drawable.bg3));
         try {
             loadMediaDataFromSessionManager();
             setupEventListeners();
@@ -158,12 +160,11 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         setTitle(getString(R.string.browse_title)); // Badge, when set, takes precedent
         // over title
         setHeadersState(HEADERS_ENABLED);
-        setHeadersTransitionOnBackEnabled(true);
+        //setHeadersTransitionOnBackEnabled(true);
 
         //set fastLane (or headers) background color
         setBrandColor(ContextCompat.getColor(getContext(), R.color.fastlane_background));
         //set search icon color
-
         setSearchAffordanceColor(ContextCompat.getColor(getContext(), R.color.search_opaque));
     }
 
@@ -176,7 +177,7 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         rowsAdapter.clear();
         int i;
         for (i = 0; i < MOVIE_CATEGORY.size(); i++) {   //NUM_ROWS
-            List<Video> list = MediaLibrary.getMediaListByIndex(i);
+            List<OMedia> list = MediaLibrary.getMediaListByIndex(i);
 
             ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
 
@@ -190,16 +191,13 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
             rowsAdapter.add(new ListRow(header, listRowAdapter));
         }
 
-        HeaderItem gridHeader = new HeaderItem(i, "关于视频");
-        GridItemPresenter mGridPresenter = new GridItemPresenter();
-        ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
-        gridRowAdapter.add(getString(R.string.my_favorites));
-        gridRowAdapter.add(getResources().getString(R.string.system_settings));
-        rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
-
-
+        //HeaderItem gridHeader = new HeaderItem(i, "关于视频");
+        //GridItemPresenter mGridPresenter = new GridItemPresenter();
+        //ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
+        //gridRowAdapter.add(getString(R.string.my_favorites));
+        //gridRowAdapter.add(getResources().getString(R.string.system_settings));
+        //rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
         setAdapter(rowsAdapter);
-        //rowsAdapter.notifyAll();
         return true;
     }
 
@@ -219,16 +217,16 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         @Override
         public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
                                   RowPresenter.ViewHolder rowViewHolder, Row row) {
-            if (item instanceof Video) {
-                Video video = (Video) item;
+            if (item instanceof OMedia) {
+                OMedia video = (OMedia) item;
                 Log.d(TAG, "Item: " + item.toString());
-                if (video.getmMovie().getSourceId() == 1004) {
+                if (video.getMovie().getSourceId() == 1004) {
                     Map<String, String> map;
                     String action = null;
                     Intent intent = null;
                     try {
-                        map = JsonToMap(video.getmMovie().getSourceUrl());
-                        Log.d(TAG, video.getmMovie().getSourceUrl());
+                        map = JsonToMap(video.getMovie().getSourceUrl());
+                        Log.d(TAG, video.getMovie().getSourceUrl());
                         action = map.get("action");
                         intent = new Intent(action);
                     } catch (Exception e) {
@@ -251,14 +249,14 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
                         Toast.makeText(getActivity(), "没有找到应用： " + map.get("package"), Toast.LENGTH_SHORT).show();
                     }
 
-                } else if (video.getmMovie().getSourceId() == 1003) {
+                } else if (video.getMovie().getSourceId() == 1003) {
 
                     Map<String, String> map;
                     String action = null;
                     Intent intent = null;
                     try {
-                        map = JsonToMap(video.getmMovie().getSourceUrl());
-                        Log.d(TAG, video.getmMovie().getSourceUrl());
+                        map = JsonToMap(video.getMovie().getSourceUrl());
+                        Log.d(TAG, video.getMovie().getSourceUrl());
                         action = map.get("action");
                         intent = new Intent(action);
                     } catch (Exception e) {
@@ -293,19 +291,14 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
                 }
 
 
-            } else if (item instanceof String)
-            {
+            } else if (item instanceof String) {
                 if (((String) item).contains(getString(R.string.my_favorites))) {
                     Intent intent = new Intent(getActivity(), BrowseErrorActivity.class);
                     startActivity(intent);
-                }
-                else if (((String) item).contains(getString(R.string.system_settings)))
-                {
+                } else if (((String) item).contains(getString(R.string.system_settings))) {
                     Intent intent = new Intent(Settings.ACTION_SETTINGS);
                     startActivity(intent);
-                }
-                else
-                {
+                } else {
                     ;//Toast.makeText(getActivity(), ((String) item), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -442,32 +435,27 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         @Override
         public void handleMessage(Message msg) {
 
-            if (msg.what == 9)
-            {
-                //MediaLibrary.getSessionManager(getActivity()).getMoBileSession().printMovies();
-                Intent intent = new Intent(getActivity(), FullscreenPlayBackActivity.class);
-                OPlayerSession op = MediaLibrary.getSessionManager(getActivity()).getMoBileSession();
-
-                Video video = op.getVideoByIndex(0);
-
-                if (video != null)
-                {
-                    Log.d("MyService", video.getmMovie().getSourceUrl().toString());
-                    intent.putExtra("Video", video);
-                    startActivity(intent);
-                }
-                else
-                    Log.d("MyService","没有发现媒体资源 "+op.getVideos().size());
-
-            }
-
-
             try {
                 loadMediaDataFromSessionManager();
                 setupEventListeners();
-                showLoadingDialog(getActivity(), false);
+                //showLoadingDialog(getActivity(), false);
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+
+            if (msg.what == 90000) {
+                //MediaLibrary.getSessionManager(getActivity()).getMoBileSession().printMovies();
+                Intent intent = new Intent(getActivity(), FullscreenPlayBackActivity.class);
+                OPlayerSession op = MediaLibrary.getSessionManager(getActivity()).getMoBileSession();
+                OMedia video = op.getVideoByIndex(0);
+
+                if (video != null) {
+                    if (TextUtils.isEmpty(video.getMovie().getSourceUrl())) {
+                        Log.d(TAG, video.getMovie().getSourceUrl().toString());
+                        intent.putExtra("Video", video);
+                        startActivity(intent);
+                    }
+                }
             }
         }
     };

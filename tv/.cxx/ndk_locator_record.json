@@ -1,5 +1,5 @@
 {
-  "ndkFolder": "D:\\AdroidSdk\\ndk-bundle",
+  "ndkFolder": "D:\\android-studio\\AndroidSDK\\ndk\\20.0.5594570",
   "messages": [
     {
       "level": "INFO",
@@ -7,7 +7,7 @@
     },
     {
       "level": "INFO",
-      "message": "ndk.dir in local.properties is D:\\AdroidSdk\\ndk-bundle"
+      "message": "ndk.dir in local.properties is not set"
     },
     {
       "level": "INFO",
@@ -15,23 +15,19 @@
     },
     {
       "level": "INFO",
-      "message": "sdkFolder is D:\\AdroidSdk"
+      "message": "sdkFolder is D:\\android-studio\\AndroidSDK"
     },
     {
       "level": "INFO",
-      "message": "Considering D:\\AdroidSdk\\ndk-bundle by ndk.dir"
+      "message": "Considering D:\\android-studio\\AndroidSDK\\ndk-bundle in SDK ndk-bundle folder"
     },
     {
       "level": "INFO",
-      "message": "Considering D:\\AdroidSdk\\ndk-bundle in SDK ndk-bundle folder"
+      "message": "Considering D:\\android-studio\\AndroidSDK\\ndk\\20.0.5594570 in SDK ndk folder"
     },
     {
       "level": "INFO",
-      "message": "Considering D:\\AdroidSdk\\ndk\\20.0.5594570 in SDK ndk folder"
-    },
-    {
-      "level": "INFO",
-      "message": "Found requested ndk.dir (D:\\AdroidSdk\\ndk-bundle) which has version 20.0.5392854-rc2"
+      "message": "No user requested version, choosing D:\\android-studio\\AndroidSDK\\ndk\\20.0.5594570 which is version 20.0.5594570"
     }
   ]
 }
