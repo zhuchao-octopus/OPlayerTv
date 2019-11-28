@@ -55,7 +55,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-import com.zhuchao.android.playsession.OPlayerSession;
 import com.zhuchao.android.playsession.SessionCompleteCallback;
 import com.zhuchao.android.shapeloading.ShapeLoadingDialog;
 import com.zhuchao.android.video.Movie;
@@ -93,13 +92,11 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Log.i(TAG, "onCreate");
         super.onActivityCreated(savedInstanceState);
 
+        MediaLibrary.getSessionManager(getActivity().getApplicationContext()).setUserSessionCallback(this);
         prepareBackgroundManager();
         setupUIElements();
-
-        MediaLibrary.getSessionManager(getActivity()).setUserSessionCallback(this);
 
 
         //if (!MediaLibrary.isSessionManagerInitComplete())
@@ -169,9 +166,6 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
     }
 
     private boolean loadMediaDataFromSessionManager() {
-
-        //if (!MediaLibrary.isSessionManagerInitComplete()) return false;
-        MediaLibrary.getSessionManager(getActivity());
 
         MediaLibrary.setupCategoryList();
         rowsAdapter.clear();
@@ -280,7 +274,7 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
 
                 } else {
                     //Intent intent = new Intent(getActivity(), DetailsActivity.class);
-                    Intent intent = new Intent(getActivity(), FullscreenPlayBackActivity.class);
+                    Intent intent = new Intent(getActivity(), PlayBackManagerActivity.class);
                     intent.putExtra("Video", video);
                     Bundle bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             getActivity(),
@@ -443,20 +437,6 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
                 e.printStackTrace();
             }
 
-            if (msg.what == 90000) {
-                //MediaLibrary.getSessionManager(getActivity()).getMoBileSession().printMovies();
-                Intent intent = new Intent(getActivity(), FullscreenPlayBackActivity.class);
-                OPlayerSession op = MediaLibrary.getSessionManager(getActivity()).getMoBileSession();
-                OMedia video = op.getVideoByIndex(0);
-
-                if (video != null) {
-                    if (TextUtils.isEmpty(video.getMovie().getSourceUrl())) {
-                        Log.d(TAG, video.getMovie().getSourceUrl().toString());
-                        intent.putExtra("Video", video);
-                        startActivity(intent);
-                    }
-                }
-            }
         }
     };
 

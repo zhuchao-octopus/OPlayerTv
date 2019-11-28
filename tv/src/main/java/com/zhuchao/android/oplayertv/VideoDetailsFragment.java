@@ -170,7 +170,7 @@ public class VideoDetailsFragment extends DetailsFragment {
             public void onActionClicked(Action action) {
                 if (action.getId() == ACTION_WATCH_TRAILER) {
                     //Intent intent = new Intent(getActivity(), PlaybackActivity.class);
-                    Intent intent = new Intent(getActivity(), FullscreenPlayBackActivity.class);
+                    Intent intent = new Intent(getActivity(), PlayBackManagerActivity.class);
                     intent.putExtra("Video", mSelectedMovie);
                     startActivity(intent);
                 } else {

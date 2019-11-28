@@ -17,31 +17,29 @@ package com.zhuchao.android.oplayertv;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Instrumentation;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v17.leanback.widget.ImageCardView;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.zhuchao.android.callbackevent.NormalRequestCallback;
 import com.zhuchao.android.libfilemanager.AppsChangedCallback;
+import com.zhuchao.android.libfilemanager.FilesManager;
 import com.zhuchao.android.libfilemanager.MyAppsManager;
 import com.zhuchao.android.libfilemanager.bean.AppInfor;
 import com.zhuchao.android.netutil.NetUtils;
 import com.zhuchao.android.netutil.OkHttpUtils;
-import com.zhuchao.android.oplayertv.data.json.regoem.RecommendversionBean;
 import com.zhuchao.android.video.OMedia;
 
 import java.util.ArrayList;
@@ -60,30 +58,41 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     //private String SourceURL;
     //private UpdateManager manager = UpdateManager.getInstance();
     //private StorageManager mStorageManager;
-    //private Handler handler = new Handler();
+    private Handler handler = new Handler();
     //private int mBackCount = 0;
     //private MainFragment mBrowseFragment;
     private MyAppsManager myAppsManager;
     private NetUtils netUtils;
     //private boolean isPlaying =false;
 
+    private String getRealPathFromURI(Uri contentURI) {
+        String result = null;
+        Cursor cursor = null;
+        try {
+            cursor = getContentResolver().query(contentURI, null, null, null, null);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        if (cursor == null) {
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
+    }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-
-        if (getIntent() != null) {
-            String musicPath = getIntent().getData().getPath(); //得到文件的路径，
-            //int songIndex = musicPath.lastIndexOf("/");
-            //int songNameIndex = musicPath.lastIndexOf(".");
-            //String songName = musicPath.substring(songIndex + 1, songNameIndex);
-            //得到歌曲的名字，当然还可以获取歌曲的大小、艺术家
-            //String kkkString = musicPath.substring(lll+2, songNameIndex);
-            //Log.i("MusicPlayActivity", "" + musicPath + "," + musicPath);
-            OMedia mvideo = new OMedia(musicPath);
-            Intent ii = new Intent(MainActivity.this, FullscreenPlayBackActivity.class);
-            ii.putExtra("Video", mvideo);
-           startActivity(ii);
+            Uri uri = intent.getData();
+            if (uri != null) {
+                OMedia mvideo = new OMedia(FilesManager.getRealFilePathFromUri(MainActivity.this,uri));
+                Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
+                ii.putExtra("Video", mvideo);
+                startActivity(ii);
         }
     }
 
@@ -91,21 +100,35 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        Intent intent = getIntent();
+        if (intent != null) {
+            Uri uri = intent.getData();
+            if (uri != null) {
+                //Log.i(TAG, uri.toString() + ", " + uri.getScheme() + "," + uri.getHost() + "," + uri.getPort() + "," + uri.getPath() + "," + uri.getQuery());
+                //String musicPath = uri.toString(); //得到文件的路径，
+
+                OMedia mvideo = new OMedia(FilesManager.getRealFilePathFromUri(MainActivity.this,uri));
+                Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
+                ii.putExtra("Video", mvideo);
+                startActivity(ii);
+                finish();
+            }
+        }
+
+
+        setContentView(R.layout.activity_main);
         //mBrowseFragment = (MainFragment) getFragmentManager().findFragmentById(R.id.main_browse_fragment);
         requestPermition();
-
-        //MediaLibrary.getSessionManager(MainActivity.this).setUserSessionCallback(null);
         //myAppsManager = new MyAppsManager(MainActivity.this, this);
-        //netUtils = new NetUtils(MainActivity.this, this);
-        //handler.postDelayed(runnable, 10000);
+        netUtils = new NetUtils(MainActivity.this, this);
+        handler.postDelayed(runnable, 60000);
     }
 
     @Override
     protected void onStart() {
-
         super.onStart();
+
     }
 
     @Override
@@ -118,7 +141,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     @Override
     public void onBackPressed() {
         //super.onBackPressed();
-       AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("温馨提示：");
         builder.setMessage("您真的要退出 All Player ？");
 
@@ -219,8 +242,8 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
         OkHttpUtils.request(url, new NormalRequestCallback() {
             @Override
             public void onRequestComplete(String s, int i) {
-                if (i < 0) return;
-                final RecommendversionBean versionBean = new Gson().fromJson(s, RecommendversionBean.class);
+                //if (i < 0) return;
+                /*final RecommendversionBean versionBean = new Gson().fromJson(s, RecommendversionBean.class);
                 if (versionBean.getStatus() == 0) {
                     final RecommendversionBean.DataBean data = versionBean.getData();
                     runOnUiThread(new Runnable() {
@@ -244,7 +267,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
                                     }).show();
                         }
                     });
-                }
+                }*/
             }
         });
     }

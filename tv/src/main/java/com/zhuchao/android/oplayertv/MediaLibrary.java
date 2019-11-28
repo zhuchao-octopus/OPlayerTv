@@ -62,7 +62,8 @@ public final class MediaLibrary { // implements SessionCompleteCallback
     //释放OPlayerSessionManager
     public static void ClearOPlayerSessionManager() {
         if (mSessionManager != null)
-            mSessionManager.free();
+            if (mSessionManager.isInitComplete())
+                mSessionManager.free();
         mSessionManager = null;
     }
 
@@ -156,7 +157,6 @@ public final class MediaLibrary { // implements SessionCompleteCallback
     }
 
     public static void free() {
-        //getSessionManager(
         ClearOPlayerSessionManager();
     }
 
