@@ -120,7 +120,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
         setContentView(R.layout.activity_main);
         //mBrowseFragment = (MainFragment) getFragmentManager().findFragmentById(R.id.main_browse_fragment);
         requestPermition();
-        //myAppsManager = new MyAppsManager(MainActivity.this, this);
+        myAppsManager = new MyAppsManager(MainActivity.this, this);
         netUtils = new NetUtils(MainActivity.this, this);
         handler.postDelayed(runnable, 60000);
     }
@@ -134,8 +134,13 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        MediaLibrary.free();
-
+        try {
+            MediaLibrary.free();
+            netUtils.Free();
+            myAppsManager.Free();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
