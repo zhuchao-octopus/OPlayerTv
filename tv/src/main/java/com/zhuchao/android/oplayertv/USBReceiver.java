@@ -40,13 +40,13 @@ public class USBReceiver extends BroadcastReceiver {
             if (!TextUtils.isEmpty(mountPath)) {
                 //读取到U盘路径再做其他业务逻辑
                 //SPUtils.getInstance().put("UsbPath", mountPath);
-                boolean mounted = isMounted(mountPath);
-                Log.d(TAG, "onReceive: " + "U盘挂载" + mounted);
-                MediaLibrary.updateMobileMedia(BlockName,BlockPath);
+                //boolean mounted = isMounted(mountPath);
+                //Log.d(TAG, "onReceive: " + "U盘挂载" + mounted);
+                //MediaLibrary.updateMobileMedia(BlockName,BlockPath);
             }
         } else if (action.equals(Intent.ACTION_MEDIA_UNMOUNTED) || action.equals(Intent.ACTION_MEDIA_EJECT)) {
-            Log.d(TAG, "onReceive: " + "U盘移除了");
-            MediaLibrary.updateMobileMedia(BlockName,BlockPath);
+            //Log.d(TAG, "onReceive: " + "U盘移除了");
+            //MediaLibrary.updateMobileMedia(BlockName,BlockPath);
         } else if (action.equals("android.intent.action.BOOT_COMPLETED")) {
             //如果是开机完成，则需要调用另外的方法获取U盘的路径
         }
@@ -114,7 +114,7 @@ public class USBReceiver extends BroadcastReceiver {
                     File path2 = (File) getPath.invoke(vol);
                     String p1 = (String) getBestVolumeDescription.invoke(mStorageManager, vol);
                     String p2 = path2.getPath();
-                    Log.d(TAG, "-----------path1-----------------" + p1);               //打印U盘卷标名称
+                    Log.d(TAG, "-----------path1-----------------" + p1);         //打印U盘卷标名称
                     Log.d(TAG, "-----------path2-----------------" + p2);         //打印U盘路径
                     BlockName=p1;
                     BlockPath=p2;

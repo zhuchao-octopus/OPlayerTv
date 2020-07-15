@@ -34,8 +34,8 @@ android {
         applicationId "com.zhuchao.android.oplayertv"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 29
-        versionName "2.9"
+        versionCode 30
+        versionName "3.0"
         signingConfig signingConfigs.release
     }
 
@@ -74,15 +74,14 @@ dependencies {
     implementation 'com.nineoldandroids:library:2.4.0'
     implementation 'com.android.support:support-v4:28.0.0'
 
-    implementation 'com.zhuchao.android:libDecodeCore:+@aar'
-    implementation 'com.zhuchao.android:libNetUtil:+@aar'
-    implementation 'com.zhuchao.android:libPlayUtil:+@aar'
-    implementation 'com.zhuchao.android:libPlaySession:+@aar'
-    implementation 'com.zhuchao.android:libVideo:+@aar'
-    implementation 'com.zhuchao.android:libCallbackEvent:+@aar'
-    implementation 'com.zhuchao.android:libFilesManager:+@aar'
-    implementation 'com.zhuchao.android:libDataBaseUtil:+@aar'
-    implementation 'com.zhuchao.android:libDialog:+@aar'
+    implementation ('com.zhuchao.android:libDecodeCore:2.0@aar')
+    implementation ('com.zhuchao.android:libNetUtil:2.0@aar')
+    implementation('com.zhuchao.android:libPlayUtil:2.1@aar')
+    implementation('com.zhuchao.android:libPlaySession:2.2@aar')
+    implementation ('com.zhuchao.android:libVideo:1.1:@aar')
+    implementation ('com.zhuchao.android:libCallbackEvent:1.0:@aar')
+    implementation('com.zhuchao.android:libFilesManager:1.2@aar')
+    implementation('com.zhuchao.android:libDataBaseUtil:2.0@aar')
 
     implementation('com.squareup.okhttp3:okhttp:4.2.2')
     implementation ('com.squareup.okio:okio:1.14.0')

@@ -62,8 +62,7 @@ public final class MediaLibrary { // implements SessionCompleteCallback
     //释放OPlayerSessionManager
     public static void ClearOPlayerSessionManager() {
         if (mSessionManager != null)
-            if (mSessionManager.isInitComplete())
-                mSessionManager.free();
+           mSessionManager.free();
         mSessionManager = null;
     }
 
@@ -110,11 +109,11 @@ public final class MediaLibrary { // implements SessionCompleteCallback
         String categoryName = MOVIE_CATEGORY.get(categoryIndex).toString();
         int categoryId = getCategoryIdByValue(categoryName);
 
-        if (mSessionManager.isInitComplete() && (categoryId > 0)) {
-            mSessions = mSessionManager.getmSessions();//获取板块分类集合
-            if (mSessions.get(categoryId) != null)
-                videos = mSessions.get(categoryId).getVideos();//从集合中得到直播视频列表
-        }
+
+        mSessions = mSessionManager.getmSessions();//获取板块分类集合
+        if (mSessions.get(categoryId) != null)
+            videos = mSessions.get(categoryId).getVideos();//从集合中得到直播视频列表
+
         return videos;
     }
 
@@ -153,11 +152,7 @@ public final class MediaLibrary { // implements SessionCompleteCallback
             if (value.equals(entry.getValue()))
                 return (int) entry.getKey();
         }
-        return -10;
-    }
-
-    public static void free() {
-        ClearOPlayerSessionManager();
+        return -10000;
     }
 
     //该方法为OPlayerSessionManager 的回调方法，当OPlayerSessionManager 完成了一个任务后，

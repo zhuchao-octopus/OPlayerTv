@@ -56,7 +56,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.zhuchao.android.playsession.SessionCompleteCallback;
-import com.zhuchao.android.shapeloading.ShapeLoadingDialog;
 import com.zhuchao.android.video.Movie;
 import com.zhuchao.android.video.OMedia;
 
@@ -66,6 +65,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static com.zhuchao.android.oplayertv.MediaLibrary.MOVIE_CATEGORY;
+
+//import com.zhuchao.android.shapeloading.ShapeLoadingDialog;
 
 
 public class MainFragment extends BrowseFragment implements SessionCompleteCallback {
@@ -84,7 +85,7 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
     private BackgroundManager mBackgroundManager;
     //private boolean mIsInitComplete = false;
 
-    private ShapeLoadingDialog mShapeLoadingDialog = null;
+    //private ShapeLoadingDialog mShapeLoadingDialog = null;
     private ArrayObjectAdapter rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
     private CardPresenter cardPresenter = new CardPresenter();
     private final int mDrawableID[] = {R.drawable.bg0, R.drawable.bg1, R.drawable.bg2};
@@ -94,7 +95,7 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        MediaLibrary.getSessionManager(getActivity().getApplicationContext()).setUserSessionCallback(this);
+        MediaLibrary.getSessionManager(getActivity().getApplicationContext());
         prepareBackgroundManager();
         setupUIElements();
 
@@ -154,7 +155,7 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
     private void setupUIElements() {
         //setBadgeDrawable(getActivity().getResources().getDrawable(
         //R.drawable.videos_by_google_banner));
-        setTitle(getString(R.string.browse_title)); // Badge, when set, takes precedent
+        setTitle(getString(R.string.app_name)); // Badge, when set, takes precedent
         // over title
         setHeadersState(HEADERS_ENABLED);
         //setHeadersTransitionOnBackEnabled(true);
@@ -162,28 +163,57 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         //set fastLane (or headers) background color
         setBrandColor(ContextCompat.getColor(getContext(), R.color.fastlane_background));
         //set search icon color
-        setSearchAffordanceColor(ContextCompat.getColor(getContext(), R.color.search_opaque));
+        //setSearchAffordanceColor(ContextCompat.getColor(getContext(), R.color.search_opaque));
     }
 
     private boolean loadMediaDataFromSessionManager() {
 
         MediaLibrary.setupCategoryList();
         rowsAdapter.clear();
-        int i;
-        for (i = 0; i < MOVIE_CATEGORY.size(); i++) {   //NUM_ROWS
+        setAdapter(rowsAdapter);
+        Log.d(TAG,"MediaLibrary.MOVIE_CATEGORY  size ="+ MOVIE_CATEGORY.size());
+
+        for (int i = 0; i < MOVIE_CATEGORY.size(); i++) {   //NUM_ROWS
             List<OMedia> list = MediaLibrary.getMediaListByIndex(i);
+            if (list == null) continue;
+            Log.d(TAG,"MediaLibrary.getMediaListByIndex "+ i+" size ="+ list.size());
+            if (list.size()<=0) continue;
 
             ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
+            HeaderItem header = new HeaderItem(i, MOVIE_CATEGORY.get(i).toString());
 
-            if (list != null) {
-                for (int j = 0; j < list.size(); j++) {//NUM_COLS
+
+            double f = list.size() / 20;
+            //int n = list.size() % 20;
+            for (int j = 0; j < list.size(); j++) {//NUM_COLS
+
+                if (f <= 1)
+                {
+                    if (listRowAdapter == null)
+                        listRowAdapter = new ArrayObjectAdapter(cardPresenter);
                     listRowAdapter.add(list.get(j));
+                }
+                else
+                {
+                    if (listRowAdapter == null)
+                        listRowAdapter = new ArrayObjectAdapter(cardPresenter);
+                    listRowAdapter.add(list.get(j));
+
+                    if (((j % 19) == 0) && (j != 0)) {
+                        rowsAdapter.add(new ListRow(header, listRowAdapter));
+                        //rowsAdapter.notify();
+                        listRowAdapter = null;
+                    }
                 }
             }
 
-            HeaderItem header = new HeaderItem(i, MOVIE_CATEGORY.get(i).toString());
-            rowsAdapter.add(new ListRow(header, listRowAdapter));
+            if (listRowAdapter != null) {
+                rowsAdapter.add(new ListRow(header, listRowAdapter));
+                //rowsAdapter.notify();
+                listRowAdapter = null;
+            }
         }
+
 
         //HeaderItem gridHeader = new HeaderItem(i, "关于视频");
         //GridItemPresenter mGridPresenter = new GridItemPresenter();
@@ -191,7 +221,8 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         //gridRowAdapter.add(getString(R.string.my_favorites));
         //gridRowAdapter.add(getResources().getString(R.string.system_settings));
         //rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
-        setAdapter(rowsAdapter);
+
+        //rowsAdapter.notifyAll();
         return true;
     }
 
@@ -287,8 +318,8 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
 
             } else if (item instanceof String) {
                 if (((String) item).contains(getString(R.string.my_favorites))) {
-                    Intent intent = new Intent(getActivity(), BrowseErrorActivity.class);
-                    startActivity(intent);
+                    //Intent intent = new Intent(getActivity(), BrowseErrorActivity.class);
+                    //startActivity(intent);
                 } else if (((String) item).contains(getString(R.string.system_settings))) {
                     Intent intent = new Intent(Settings.ACTION_SETTINGS);
                     startActivity(intent);
@@ -384,7 +415,7 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
 
 
     public void showLoadingDialog(Context mContext, Boolean bVisible) {
-        if (bVisible) {
+     /* if (bVisible) {
             if (mShapeLoadingDialog == null)
                 mShapeLoadingDialog = (new ShapeLoadingDialog.Builder(mContext)).loadText("请稍等，正在加载媒体库...").build();
             mShapeLoadingDialog.show();
@@ -392,15 +423,7 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
             mShapeLoadingDialog.cancel();
             mShapeLoadingDialog.dismiss();
             mShapeLoadingDialog = null;
-        }
-    }
-
-    @Override
-    public synchronized void OnSessionComplete(int i, String s) {
-        Message msg = new Message();
-        msg.what = i;
-        mMyHandler.sendMessage(msg);
-        Log.d(TAG, "OnSessionComplete ID = " + i + "   " + s);
+        }*/
     }
 
     public Map<String, String> JsonToMap(String Jsonstr) {
@@ -423,6 +446,14 @@ public class MainFragment extends BrowseFragment implements SessionCompleteCallb
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
+    }
+
+    @Override
+    public synchronized void OnSessionComplete(int i, String s) {
+        Message msg = new Message();
+        msg.what = i;
+        mMyHandler.sendMessage(msg);
+        Log.d(TAG, "OnSessionComplete ID = " + i + "   " + s);
     }
 
     Handler mMyHandler = new Handler() {

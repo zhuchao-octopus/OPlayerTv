@@ -58,7 +58,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     //private String SourceURL;
     //private UpdateManager manager = UpdateManager.getInstance();
     //private StorageManager mStorageManager;
-    private Handler handler = new Handler();
+    //private Handler handler = new Handler();
     //private int mBackCount = 0;
     //private MainFragment mBrowseFragment;
     private MyAppsManager myAppsManager;
@@ -68,11 +68,14 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     private String getRealPathFromURI(Uri contentURI) {
         String result = null;
         Cursor cursor = null;
+
+
         try {
             cursor = getContentResolver().query(contentURI, null, null, null, null);
         } catch (Throwable e) {
             e.printStackTrace();
         }
+
         if (cursor == null) {
             result = contentURI.getPath();
         } else {
@@ -88,11 +91,28 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
             Uri uri = intent.getData();
+            String url = intent.getStringExtra("url");
             if (uri != null) {
                 OMedia mvideo = new OMedia(FilesManager.getRealFilePathFromUri(MainActivity.this,uri));
                 Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
                 ii.putExtra("Video", mvideo);
+                ii.putExtra( "position",intent.getLongExtra("position",0));
+                ii.putExtra("home", getIntent().getStringExtra("home"));
                 startActivity(ii);
+                this.finish();
+        }
+
+        if (url!= null) {
+            //Log.i(TAG, uri.toString() + ", " + uri.getScheme() + "," + uri.getHost() + "," + uri.getPort() + "," + uri.getPath() + "," + uri.getQuery());
+            //String musicPath = uri.toString(); //得到文件的路径，
+
+            OMedia mvideo = new OMedia(url);
+            Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
+            ii.putExtra("Video", mvideo);
+            ii.putExtra("home", getIntent().getStringExtra("home"));
+            ii.putExtra( "position",intent.getLongExtra("position",0));
+            startActivity(ii);
+            finish();
         }
     }
 
@@ -101,9 +121,12 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        requestPermition();
+
         Intent intent = getIntent();
         if (intent != null) {
             Uri uri = intent.getData();
+            String url = intent.getStringExtra("url");
             if (uri != null) {
                 //Log.i(TAG, uri.toString() + ", " + uri.getScheme() + "," + uri.getHost() + "," + uri.getPort() + "," + uri.getPath() + "," + uri.getQuery());
                 //String musicPath = uri.toString(); //得到文件的路径，
@@ -111,6 +134,21 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
                 OMedia mvideo = new OMedia(FilesManager.getRealFilePathFromUri(MainActivity.this,uri));
                 Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
                 ii.putExtra("Video", mvideo);
+                ii.putExtra("home", getIntent().getStringExtra("home"));
+                ii.putExtra( "position",intent.getLongExtra("position",0));
+                startActivity(ii);
+                finish();
+            }
+
+            if (url!= null) {
+                //Log.i(TAG, uri.toString() + ", " + uri.getScheme() + "," + uri.getHost() + "," + uri.getPort() + "," + uri.getPath() + "," + uri.getQuery());
+                //String musicPath = uri.toString(); //得到文件的路径，
+
+                OMedia mvideo = new OMedia(url);
+                Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
+                ii.putExtra("Video", mvideo);
+                ii.putExtra("home", getIntent().getStringExtra("home"));
+                ii.putExtra( "position",intent.getLongExtra("position",0));
                 startActivity(ii);
                 finish();
             }
@@ -119,10 +157,10 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
 
         setContentView(R.layout.activity_main);
         //mBrowseFragment = (MainFragment) getFragmentManager().findFragmentById(R.id.main_browse_fragment);
-        requestPermition();
+
         myAppsManager = new MyAppsManager(MainActivity.this, this);
         netUtils = new NetUtils(MainActivity.this, this);
-        handler.postDelayed(runnable, 60000);
+        //handler.postDelayed(runnable, 60000);
     }
 
     @Override
@@ -135,7 +173,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
     protected void onDestroy() {
         super.onDestroy();
         try {
-            MediaLibrary.free();
+            MediaLibrary.ClearOPlayerSessionManager();
             netUtils.Free();
             myAppsManager.Free();
         } catch (Exception e) {
@@ -154,7 +192,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
         builder.setPositiveButton("退出", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                MediaLibrary.free();
+                MediaLibrary.ClearOPlayerSessionManager();
                 finish();
             }
         });
@@ -236,7 +274,11 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
             //setAutoTimeZone(0);
             //}
 
-            checkSoftwareVersion();
+            try {
+                checkSoftwareVersion();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     };
 

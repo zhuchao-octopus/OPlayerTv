@@ -9,26 +9,26 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.SurfaceHolder;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.zhuchao.android.callbackevent.PlayerCallback;
+import com.zhuchao.android.databaseutil.SPreference;
+import com.zhuchao.android.libfilemanager.FilesManager;
 import com.zhuchao.android.netutil.TimeDateUtils;
 import com.zhuchao.android.video.OMedia;
 
@@ -37,7 +37,7 @@ import com.zhuchao.android.video.OMedia;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class PlayBackManagerActivity extends Activity implements PlayerCallback {
+public class PlayBackManagerActivity extends Activity implements PlayerCallback, View.OnClickListener, SeekBar.OnSeekBarChangeListener {
     private static final String TAG = "PlayBackManagerActivity-->";
     private static SurfaceView mSurfaceView;
     private static OMedia mvideo = null;
@@ -57,9 +57,12 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
     //private byte[] temp = {0, 0, 0, 0};
     private SeekBar seekBar;
     private ImageView ivplay;
-    private RelativeLayout topbar;
+    private LinearLayout topbar;
     private LinearLayout bottombar;
     private TextView tvprogress;
+
+    private ImageView iv_setting, iv_repeat, iv_track, iv_nexts;
+    private TextView tv_nexts;
 
     //MyPlayer OPlayer = null;
     @Override
@@ -70,43 +73,50 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
         tvFileName = findViewById(R.id.textView);
 
         mSurfaceView = findViewById(R.id.surfaceView);
-        //mSurfaceView.setVisibility(View.INVISIBLE);
+        mSurfaceView.setVisibility(View.INVISIBLE);
 
         mProgressBar = findViewById(R.id.progressBar);
-        mProgressBar.setVisibility(View.VISIBLE);
-
         seekBar = findViewById(R.id.seekBar);
-        seekBar.setVisibility(View.VISIBLE);
+        seekBar.setOnSeekBarChangeListener(this);
 
         ivplay = findViewById(R.id.ivallplay);
-        ivplay.setVisibility(View.INVISIBLE);
-
         topbar = findViewById(R.id.topbar);
         bottombar = findViewById(R.id.bottombar);
-        //bottombar.getBackground().setAlpha(100);
-        tvprogress = findViewById(R.id.tvprogress);
+        tvprogress = findViewById(R.id.tvdatetime);
+        tvprogress.setText("");
+        iv_setting = findViewById(R.id.ivallplay);
+        iv_repeat = findViewById(R.id.iv_repeat);
+        iv_track = findViewById(R.id.iv_track);
+        iv_nexts = findViewById(R.id.iv_nexts);
+        tv_nexts = findViewById(R.id.tv_nexts);
+        //iv_track.setVisibility(View.INVISIBLE);
 
-        topbar.bringToFront();
+        iv_setting.setOnClickListener(this);
+        iv_repeat.setOnClickListener(this);
+        iv_track.setOnClickListener(this);
+        iv_nexts.setOnClickListener(this);
+        ivplay.setOnClickListener(this);
+
         //mSurfaceView.setZOrderOnTop(true);
         //mSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-        mSurfaceView.getHolder().addCallback((new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                Canvas canvas = mSurfaceView.getHolder().lockCanvas();
-                canvas.drawColor(Color.BLACK);  //随便设置背景颜色
-                mSurfaceView.getHolder().unlockCanvasAndPost(canvas);
-            }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-
-            }
-        }));
+//        mSurfaceView.getHolder().addCallback((new SurfaceHolder.Callback() {
+//            @Override
+//            public void surfaceCreated(SurfaceHolder holder) {
+//                Canvas canvas = mSurfaceView.getHolder().lockCanvas();
+//                canvas.drawColor(Color.BLACK);  //随便设置背景颜色
+//                mSurfaceView.getHolder().unlockCanvasAndPost(canvas);
+//            }
+//
+//            @Override
+//            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+//
+//            }
+//
+//            @Override
+//            public void surfaceDestroyed(SurfaceHolder holder) {
+//
+//            }
+//        }));
 
 
         try {
@@ -114,7 +124,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
             if (mvideo != null) {
                 tvFileName.setText(mvideo.getMovie().getSourceUrl());
                 mvideo.with(this).callback(this);
-                mvideo.setNormalRage();
+                mvideo.setNormalRate();
             } else {
                 stopPlay();
             }
@@ -145,6 +155,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
         filter.addAction("com.zhuchao.android.oplayertv.PREV");
         registerReceiver(mMyReceiver, filter);
         registerHomeKeyReceiver(this);
+
     }
 
     @Override
@@ -166,6 +177,28 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
 
     @Override
     public void onBackPressed() {
+
+        if (bottombar.getVisibility() == View.INVISIBLE) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("退出提示：");
+            builder.setMessage("您真的要退出吗？");
+
+            builder.setNegativeButton("我要继续观看", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+
+            builder.setPositiveButton("退出", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    stopPlay();
+                }
+            });
+            builder.show();
+
+        }
+
         super.onBackPressed();
         Log.i(TAG, "onBackPressed");
     }
@@ -183,6 +216,45 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
 
         if (null != mHomeKeyReceiver)
             unregisterHomeKeyReceiver(this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        if (id == iv_setting.getId()) {
+
+        }
+        if (id == iv_nexts.getId()) {
+            if (mvideo != null) {
+                if (mvideo.getNextOMedia() != null) {
+                    mCountDownTimer1.cancel();
+                    mvideo = mvideo.getNextOMedia();
+                    tvFileName.setText(mvideo.getMovie().getMovieName());
+                    mCountDownTimer1.start();
+                }
+            }
+        }
+        if (id == iv_repeat.getId()) {
+            mvideo.setmPlayOrder(2);
+        }
+        if (id == iv_track.getId()) {
+
+        }
+        if (id == ivplay.getId()) {
+            if (mvideo != null) {
+                mvideo.setNormalRate();
+                mvideo.playPause();
+            }
+        }
+
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        this.stopPlay();
+
+        return super.onTouchEvent(event);
     }
 
     @Override
@@ -213,7 +285,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
                 topbar.setVisibility(View.INVISIBLE);
                 return true;
             } else {
-                builder.show();
+                //builder.show();
             }
 
         }
@@ -243,9 +315,11 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
                 break;
             case KeyEvent.KEYCODE_DPAD_CENTER:
             case KeyEvent.KEYCODE_ENTER:
+                stopPlay();
+                break;
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 if (mvideo != null) {
-                    mvideo.setNormalRage();
+                    mvideo.setNormalRate();
                     mvideo.playPause();
                 }
                 break;
@@ -263,6 +337,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
                 if (mvideo != null) mvideo.fastBack(10000l);
                 break;
             default:
+                stopPlay();
                 break;
         }
 
@@ -292,6 +367,27 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
         }
     }
 
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        try {
+            if (fromUser) {
+                if (mvideo != null) mvideo.settime(progress);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+
     class HomeWatcherReceiver extends BroadcastReceiver {
         private static final String LOG_TAG = "HomeReceiver";
         private static final String SYSTEM_DIALOG_REASON_KEY = "reason";
@@ -309,19 +405,18 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
                 if (SYSTEM_DIALOG_REASON_HOME_KEY.equals(reason)) {
                     // 短按Home键
                     stopPlay();
-                    Log.i(LOG_TAG, "homekey");
-
+                    //Log.i(LOG_TAG, "homekey");
                 } else if (SYSTEM_DIALOG_REASON_RECENT_APPS.equals(reason)) {
                     // 长按Home键 或者 activity切换键
                     stopPlay();
-                    Log.i(LOG_TAG, "long press home key or activity switch");
+                    // Log.i(LOG_TAG, "long press home key or activity switch");
                 } else if (SYSTEM_DIALOG_REASON_LOCK.equals(reason)) {
                     // 锁屏
                     stopPlay();
-                    Log.i(LOG_TAG, "lock");
+                    //Log.i(LOG_TAG, "lock");
                 } else if (SYSTEM_DIALOG_REASON_ASSIST.equals(reason)) {
                     stopPlay();
-                    Log.i(LOG_TAG, "assist");
+                    //Log.i(LOG_TAG, "assist");
                 }
             }
         }
@@ -335,31 +430,89 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
     }
 
     private synchronized void stopPlay() {
-        new Thread() {
-            public void run() {
-                if (mvideo != null)
-                    mvideo.stop();
 
-            }
-        }.start();
+        try {
+            new Thread() {
+                public void run() {
+                    long time=0;
+                    if (mvideo != null) {
+                        time =  mvideo.gettime();
+                        mvideo.save();
+                        mvideo.stop();
+                    }
 
-        PlayBackManagerActivity.this.finish();
+                    String home = getIntent().getStringExtra("home");
+                    if (!TextUtils.isEmpty(home)) {
+                        Intent ii = PlayBackManagerActivity.this.getPackageManager().getLaunchIntentForPackage(home);
+                        if (ii != null) {
+                            if (mvideo != null) {
+                                ii.setAction("com.zhuchao.android.oplayer");
+                                ii.setType("text/plain");
+                                //ii.putExtra("Video", mvideo);
+                                ii.putExtra("position",time);
+                                ii.putExtra("name", mvideo.getMovie().getMovieName());
+                                ii.putExtra("url", mvideo.getMovie().getSourceUrl());
+
+                                Log.i(TAG, "ii=" + ii.toString() + " mvideo.gettime()=" + mvideo.gettime());
+                            }
+                            startActivity(ii);
+                            //sendBroadcast(ii);
+                        } else
+                            finish();
+                    } else {
+                        PlayBackManagerActivity.this.finish();
+                    }
+                }
+            }.start();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private synchronized OMedia playVideo(final OMedia video) {
-        if (video != null) {
-            mSurfaceView.setVisibility(View.VISIBLE);
-            mProgressBar.setVisibility(View.VISIBLE);
-            ivplay.setVisibility(View.INVISIBLE);
-            topbar.setVisibility(View.VISIBLE);
-            bottombar.setVisibility(View.VISIBLE);
-            tvFileName.setText(video.getMovie().getSourceUrl());
-            try {
-                video.with(this).playOn(mSurfaceView);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (video == null) return null;
+
+        mSurfaceView.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
+        topbar.setVisibility(View.VISIBLE);
+        bottombar.setVisibility(View.VISIBLE);
+        topbar.bringToFront();
+        bottombar.bringToFront();
+
+        tvFileName.setText(video.getMovie().getSourceUrl());
+        if (mvideo.getNextOMedia() != null)
+            tv_nexts.setText(video.getNextOMedia().getMovie().getMovieName());
+
+
+        String md5 = FilesManager.md5(video.getMovie().getSourceUrl());
+        String spt = SPreference.getSharedPreferences(this, md5, "playTime");
+        //String spt = SPreference.getSharedPreferences(this,md5,"url");
+
+        long llpt = 0;
+        try {
+            if (!TextUtils.isEmpty(spt))
+                llpt = Long.parseLong(spt);
+        } catch (NumberFormatException e) {
+            llpt = 0;
+            e.printStackTrace();
         }
+
+        long lpt = getIntent().getLongExtra("position", -1);
+        if (lpt >= 0)
+            video.setmLastPlayTime(lpt);
+        else
+            video.setmLastPlayTime(llpt);
+
+        try {
+            video.with(this).playOn(mSurfaceView);
+
+            Log.i(TAG, "video=" + video.getMovie().getMovieName() + ": " + video.getmLastPlayTime());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return video;
     }
 
@@ -369,24 +522,20 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
 
         if (i <= 259)//缓冲
         {
+            ivplay.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.VISIBLE);
             bottombar.setVisibility(View.VISIBLE);
             topbar.setVisibility(View.VISIBLE);
-            mProgressBar.setVisibility(View.VISIBLE);
-            ivplay.setVisibility(View.INVISIBLE);
-            //tvprogress.setText(l1 + " / " + l2);
         } else if (i == 260)//开始播放
         {
-            mProgressBar.setVisibility(View.INVISIBLE);
-            ivplay.setVisibility(View.INVISIBLE);
-            //tvprogress.setText(l1 + " / " + l2);
+            ivplay.setImageResource(R.drawable.pause1);
+            ivplay.setVisibility(View.VISIBLE);
+            mProgressBar.setVisibility(View.GONE);
         } else if (i == 261)//暂停
         {
-            bottombar.setVisibility(View.VISIBLE);
-            topbar.setVisibility(View.VISIBLE);
+            ivplay.setImageResource(R.drawable.play1);
             ivplay.setVisibility(View.VISIBLE);
-            ivplay.bringToFront();
-            bottombar.bringToFront();
-            topbar.bringToFront();
+            mProgressBar.setVisibility(View.GONE);
         } else if (i == 267)//正在播放
         {
             if (l2 > 0) {
@@ -399,17 +548,20 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
                 seekBar.setVisibility(View.VISIBLE);
                 seekBar.setMax((int) l2);
                 seekBar.setProgress((int) l1, true);
-                mProgressBar.setVisibility(View.INVISIBLE);
+                ivplay.setImageResource(R.drawable.pause1);
+                ivplay.setVisibility(View.VISIBLE);
+                mProgressBar.setVisibility(View.GONE);
             } else {
                 bottombar.setVisibility(View.INVISIBLE);
-                mProgressBar.setVisibility(View.INVISIBLE);
+                topbar.setVisibility(View.INVISIBLE);
             }
         } else if (i >= 270)//准备
         {
+            ivplay.setVisibility(View.GONE);
             mProgressBar.setVisibility(View.VISIBLE);
         }
 
-        int ii= mvideo.getPlayState();
+        int ii = mvideo.getPlayState();
         switch (ii) {
             case 0:
             case 1:
@@ -421,30 +573,23 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback 
             case 6:
             case 7:
 
-                if (mvideo.getPlayOrder() == 0) //列表循环
+                if (mvideo.getmPlayOrder() == 0) //列表循环
                 {
                     if (mvideo.getNextOMedia() != null)
                         mvideo = playVideo(mvideo.getNextOMedia());
                     else
                         stopPlay();
-                }
-                else if (mvideo.getPlayOrder() == 1)//单次播放，只播放一次
+                } else if (mvideo.getmPlayOrder() == 1)//单次播放，只播放一次
                 {
                     stopPlay();
-                }
-                else //if (mvideo.getPlayOrder() == 2) //单曲循环
+                } else //if (mvideo.getPlayOrder() == 2) //单曲循环
                 {
                     //mvideo.setPlayOrder(mvideo.getPlayOrder()-1);
                     playVideo(mvideo);
                 }
 
                 //Log.d(TAG, "PlayState=" + mvideo.getPlayState() + ",event.type=" + i + ",TimeChanged=" + l + ", LengthChanged=" + l1 + ", PositionChanged=" + v + ", VoutCount=" + i1 + ", i2=" + i2 + ", i3=" + i3 + ", v1=" + v1 + ",Length=" + l2 + ",getPosition()=" + mvideo.getPosition());
-
                 break;
-
         }
-
     }
-
-
 }
