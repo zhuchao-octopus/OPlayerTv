@@ -127,6 +127,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
                 mvideo.setNormalRate();
             } else {
                 stopPlay();
+                PlayBackManagerActivity.this.finish();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -172,7 +173,6 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
     @Override
     protected void onPause() {
         super.onPause();
-        stopPlay();
     }
 
     @Override
@@ -193,6 +193,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     stopPlay();
+                    PlayBackManagerActivity.this.finish();
                 }
             });
             builder.show();
@@ -253,7 +254,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
     public boolean onTouchEvent(MotionEvent event) {
 
         this.stopPlay();
-
+        PlayBackManagerActivity.this.finish();
         return super.onTouchEvent(event);
     }
 
@@ -277,6 +278,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     stopPlay();
+                    PlayBackManagerActivity.this.finish();
                 }
             });
 
@@ -313,18 +315,12 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
                     }
                 }
                 break;
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-            case KeyEvent.KEYCODE_ENTER:
-                stopPlay();
-                break;
+
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 if (mvideo != null) {
                     mvideo.setNormalRate();
                     mvideo.playPause();
                 }
-                break;
-            case KeyEvent.KEYCODE_MEDIA_STOP:
-                stopPlay();
                 break;
 
             case KeyEvent.KEYCODE_DPAD_RIGHT:
@@ -336,8 +332,12 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
             case KeyEvent.KEYCODE_MEDIA_REWIND:
                 if (mvideo != null) mvideo.fastBack(10000l);
                 break;
+            case KeyEvent.KEYCODE_MEDIA_STOP:
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
             default:
                 stopPlay();
+                PlayBackManagerActivity.this.finish();
                 break;
         }
 
@@ -405,17 +405,21 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
                 if (SYSTEM_DIALOG_REASON_HOME_KEY.equals(reason)) {
                     // 短按Home键
                     stopPlay();
+                    PlayBackManagerActivity.this.finish();
                     //Log.i(LOG_TAG, "homekey");
                 } else if (SYSTEM_DIALOG_REASON_RECENT_APPS.equals(reason)) {
                     // 长按Home键 或者 activity切换键
                     stopPlay();
+                    PlayBackManagerActivity.this.finish();
                     // Log.i(LOG_TAG, "long press home key or activity switch");
                 } else if (SYSTEM_DIALOG_REASON_LOCK.equals(reason)) {
                     // 锁屏
                     stopPlay();
+                    PlayBackManagerActivity.this.finish();
                     //Log.i(LOG_TAG, "lock");
                 } else if (SYSTEM_DIALOG_REASON_ASSIST.equals(reason)) {
                     stopPlay();
+                    PlayBackManagerActivity.this.finish();
                     //Log.i(LOG_TAG, "assist");
                 }
             }
@@ -431,44 +435,40 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
 
     private synchronized void stopPlay() {
 
+
+        if (mvideo == null) {
+            return;
+        }
+        long  time = mvideo.gettime();
+
         try {
-            new Thread() {
-                public void run() {
-                    long time=0;
-                    if (mvideo != null) {
-                        time =  mvideo.gettime();
-                        mvideo.save();
-                        mvideo.stop();
-                    }
-
-                    String home = getIntent().getStringExtra("home");
-                    if (!TextUtils.isEmpty(home)) {
-                        Intent ii = PlayBackManagerActivity.this.getPackageManager().getLaunchIntentForPackage(home);
-                        if (ii != null) {
-                            if (mvideo != null) {
-                                ii.setAction("com.zhuchao.android.oplayer");
-                                ii.setType("text/plain");
-                                //ii.putExtra("Video", mvideo);
-                                ii.putExtra("position",time);
-                                ii.putExtra("name", mvideo.getMovie().getMovieName());
-                                ii.putExtra("url", mvideo.getMovie().getSourceUrl());
-
-                                Log.i(TAG, "ii=" + ii.toString() + " mvideo.gettime()=" + mvideo.gettime());
-                            }
-                            startActivity(ii);
-                            //sendBroadcast(ii);
-                        } else
-                            finish();
-                    } else {
-                        PlayBackManagerActivity.this.finish();
-                    }
-                }
-            }.start();
-
+            mvideo.save();
+            mvideo.stop();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        String home = getIntent().getStringExtra("home");
+        if (!TextUtils.isEmpty(home)) {
+            Intent ii = PlayBackManagerActivity.this.getPackageManager().getLaunchIntentForPackage(home);
+            if (ii != null) {
+                if (mvideo != null) {
+                    ii.setAction("com.zhuchao.android.oplayer");
+                    ii.setType("text/plain");
+                    //ii.putExtra("Video", mvideo);
+                    ii.putExtra("position", time);
+                    ii.putExtra("name", mvideo.getMovie().getMovieName());
+                    ii.putExtra("url", mvideo.getMovie().getSourceUrl());
+
+                    Log.i(TAG, "ii=" + ii.toString() + "position = " + time);
+                }
+                startActivity(ii);
+                //sendBroadcast(ii);
+            }
+        }
+       mvideo=null;
+
     }
 
     private synchronized OMedia playVideo(final OMedia video) {
@@ -577,11 +577,14 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
                 {
                     if (mvideo.getNextOMedia() != null)
                         mvideo = playVideo(mvideo.getNextOMedia());
-                    else
+                    else {
                         stopPlay();
+                        this.finish();
+                    }
                 } else if (mvideo.getmPlayOrder() == 1)//单次播放，只播放一次
                 {
                     stopPlay();
+                    this.finish();
                 } else //if (mvideo.getPlayOrder() == 2) //单曲循环
                 {
                     //mvideo.setPlayOrder(mvideo.getPlayOrder()-1);
