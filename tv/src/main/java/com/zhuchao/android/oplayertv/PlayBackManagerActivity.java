@@ -64,7 +64,8 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
     private ImageView iv_setting, iv_repeat, iv_track, iv_nexts;
     private TextView tv_nexts;
 
-    //MyPlayer OPlayer = null;
+    private boolean hideToolBar = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,6 +119,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
 //            }
 //        }));
 
+        hideToolBar = getIntent().getBooleanExtra("hideToolBar", false);
 
         try {
             mvideo = (OMedia) getIntent().getSerializableExtra("Video");
@@ -439,7 +441,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
         if (mvideo == null) {
             return;
         }
-        long  time = mvideo.gettime();
+        long time = mvideo.gettime();
 
         try {
             mvideo.save();
@@ -467,7 +469,7 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
                 //sendBroadcast(ii);
             }
         }
-       mvideo=null;
+        mvideo = null;
 
     }
 
@@ -519,6 +521,41 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
     @Override
     public void OnEventCallBack(int i, final long l, long l1, float v, int i1, int i2, int i3, float v1, long l2) {
         //Log.d(TAG, "PlayState=" + mvideo.getPlayState() + ",event.type=" + i + ",TimeChanged=" + l + ", LengthChanged=" + l1 + ", PositionChanged=" + v + ", VoutCount=" + i1 + ", i2=" + i2 + ", i3=" + i3 + ", v1=" + v1 + ",Length=" + l2 + ",getPosition()=" + mvideo.getPosition());
+        int ii = mvideo.getPlayState();
+        switch (ii) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                break;
+            case 5:
+            case 6:
+            case 7:
+                if (mvideo.getmPlayOrder() == 0) //列表循环
+                {
+                    if (mvideo.getNextOMedia() != null)
+                        mvideo = playVideo(mvideo.getNextOMedia());
+                    else {
+                        stopPlay();
+                        this.finish();
+                    }
+                } else if (mvideo.getmPlayOrder() == 1)//单次播放，只播放一次
+                {
+                    stopPlay();
+                    this.finish();
+                } else //if (mvideo.getPlayOrder() == 2) //单曲循环
+                {
+                    playVideo(mvideo);
+                }
+                break;
+        }
+
+        if (hideToolBar) {
+            bottombar.setVisibility(View.INVISIBLE);
+            topbar.setVisibility(View.INVISIBLE);
+            return;
+        }
 
         if (i <= 259)//缓冲
         {
@@ -560,39 +597,10 @@ public class PlayBackManagerActivity extends Activity implements PlayerCallback,
             ivplay.setVisibility(View.GONE);
             mProgressBar.setVisibility(View.VISIBLE);
         }
-
-        int ii = mvideo.getPlayState();
-        switch (ii) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-                break;
-            case 5:
-            case 6:
-            case 7:
-
-                if (mvideo.getmPlayOrder() == 0) //列表循环
-                {
-                    if (mvideo.getNextOMedia() != null)
-                        mvideo = playVideo(mvideo.getNextOMedia());
-                    else {
-                        stopPlay();
-                        this.finish();
-                    }
-                } else if (mvideo.getmPlayOrder() == 1)//单次播放，只播放一次
-                {
-                    stopPlay();
-                    this.finish();
-                } else //if (mvideo.getPlayOrder() == 2) //单曲循环
-                {
-                    //mvideo.setPlayOrder(mvideo.getPlayOrder()-1);
-                    playVideo(mvideo);
-                }
-
-                //Log.d(TAG, "PlayState=" + mvideo.getPlayState() + ",event.type=" + i + ",TimeChanged=" + l + ", LengthChanged=" + l1 + ", PositionChanged=" + v + ", VoutCount=" + i1 + ", i2=" + i2 + ", i3=" + i3 + ", v1=" + v1 + ",Length=" + l2 + ",getPosition()=" + mvideo.getPosition());
-                break;
-        }
     }
+
+
+
+
+
 }

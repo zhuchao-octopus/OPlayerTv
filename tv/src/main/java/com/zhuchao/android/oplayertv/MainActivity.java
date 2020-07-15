@@ -98,6 +98,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
                 ii.putExtra("Video", mvideo);
                 ii.putExtra( "position",intent.getLongExtra("position",0));
                 ii.putExtra("home", getIntent().getStringExtra("home"));
+                ii.putExtra("hideToolBar", getIntent().getBooleanExtra("hideToolBar",false));
                 startActivity(ii);
                 this.finish();
         }
@@ -110,6 +111,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
             Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
             ii.putExtra("Video", mvideo);
             ii.putExtra("home", getIntent().getStringExtra("home"));
+            ii.putExtra("hideToolBar", getIntent().getBooleanExtra("hideToolBar",false));
             ii.putExtra( "position",intent.getLongExtra("position",0));
             startActivity(ii);
             finish();
@@ -135,6 +137,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
                 Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
                 ii.putExtra("Video", mvideo);
                 ii.putExtra("home", getIntent().getStringExtra("home"));
+                ii.putExtra("hideToolBar", getIntent().getBooleanExtra("hideToolBar",false));
                 ii.putExtra( "position",intent.getLongExtra("position",0));
                 startActivity(ii);
                 finish();
@@ -148,6 +151,7 @@ public class MainActivity extends Activity implements ServiceConnection, AppsCha
                 Intent ii = new Intent(MainActivity.this, PlayBackManagerActivity.class);
                 ii.putExtra("Video", mvideo);
                 ii.putExtra("home", getIntent().getStringExtra("home"));
+                ii.putExtra("hideToolBar", getIntent().getBooleanExtra("hideToolBar",false));
                 ii.putExtra( "position",intent.getLongExtra("position",0));
                 startActivity(ii);
                 finish();
